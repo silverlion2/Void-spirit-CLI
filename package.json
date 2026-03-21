@@ -1,0 +1,80 @@
+{
+  "name": "void-spirit",
+  "version": "1.0.0",
+  "description": "Terminal AI coding assistant — any LLM, no login, no geo-restrictions. Works with OpenAI, Gemini, DeepSeek, Ollama, Claude & more.",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "void-spirit": "./src/index.js",
+    "vs": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node src/index.js"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "coding-assistant",
+    "terminal",
+    "llm",
+    "claude-code",
+    "claude-code-alternative",
+    "ai-coding-assistant",
+    "terminal-ai",
+    "deepseek",
+    "deepseek-coder",
+    "deepseek-reasoner",
+    "ollama",
+    "openai",
+    "gemini",
+    "groq",
+    "anthropic",
+    "ai-agent",
+    "code-agent",
+    "agentic",
+    "tool-use",
+    "multi-provider",
+    "china",
+    "no-login",
+    "developer-tools",
+    "pair-programming",
+    "ai-pair-programmer",
+    "coding-agent",
+    "local-llm",
+    "open-source"
+  ],
+  "author": "silverlion2",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/silverlion2/void-spirit-cli.git"
+  },
+  "homepage": "https://github.com/silverlion2/void-spirit-cli#readme",
+  "bugs": {
+    "url": "https://github.com/silverlion2/void-spirit-cli/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "conf": "^13.1.0",
+    "glob": "^11.0.1",
+    "marked": "^15.0.7",
+    "marked-terminal": "^7.3.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.85.4",
+    "ora": "^8.2.0"
+  }
+}

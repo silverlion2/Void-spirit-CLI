@@ -1,0 +1,10 @@
+.github/
+.git/
+.env
+.env.*
+*.log
+.DS_Store
+CONTRIBUTING.md
+CHANGELOG.md
+MARKETING.md
+*.tgz
