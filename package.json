@@ -43,7 +43,11 @@
     "ai-pair-programmer",
     "coding-agent",
     "local-llm",
-    "open-source"
+    "open-source",
+    "subagent",
+    "task-tracking",
+    "plugin-security",
+    "on-demand-skills"
   ],
   "author": "silverlion2",
   "license": "MIT",

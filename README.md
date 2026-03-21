@@ -50,7 +50,9 @@ First run will launch the setup wizard to pick your provider and model.
 | **Conversation branching** | ❌ | ✅ Fork & switch | ❌ |
 | **Plugin system** | ❌ | ✅ GitHub plugins | ✅ |
 | **Security sandbox** | ✅ | ✅ Path + command sandbox | ⚠️ Partial |
-| **Subagents** | ✅ | 🔜 Coming soon | ✅ |
+| **Subagents** | ✅ | ✅ Isolated context | ✅ |
+| **Task tracking** | ✅ | ✅ Persistent todos | ❌ |
+| **On-demand skills** | ❌ | ✅ Load on need | ❌ |
 
 ---
 
@@ -71,7 +73,10 @@ First run will launch the setup wizard to pick your provider and model.
 
 ## Features
 
-- 🛠️ **12 built-in tools** — File ops, shell commands, git, web fetch, grep, search
+- 🛠️ **15 built-in tools** — File ops, shell commands, git, web fetch, grep, search, subagents, todos, skills
+- 🤖 **Subagents** — Spawn isolated sub-agents for focused tasks, keeping main context clean
+- 📋 **Task tracking** — AI-managed todo list that persists across sessions
+- 📚 **On-demand skills** — Load expert knowledge modules only when needed (saves context)
 - 💾 **Session persistence** — Auto-save on exit, resume with `--resume`
 - 🌿 **Conversation branching** — Fork checkpoints, switch between them
 - ⚡ **Parallel tool execution** — Read-only tools run concurrently for speed
@@ -150,6 +155,9 @@ The AI can use these tools during conversation:
 | `create_directory` | Create directories |
 | `delete_file` | Delete files (with approval) |
 | `move_file` | Move/rename files |
+| `spawn_subagent` | Run isolated sub-agent for focused tasks |
+| `todo_write` | AI-managed persistent task tracking |
+| `load_skill` | Load expert knowledge modules on-demand |
 
 ---
 
@@ -202,14 +210,16 @@ src/
 ├── token-tracker.js    # Usage & cost tracking
 ├── security.js         # Path sandbox & command blocklist
 ├── project-detector.js # Auto-detect project type
-├── skill-loader.js     # Built-in skill loading
+├── skill-loader.js     # On-demand skill loading
 ├── providers/          # LLM provider adapters
 │   ├── index.js        # Provider factory
 │   ├── openai-compat.js# OpenAI-compatible (most providers)
 │   └── anthropic.js    # Native Anthropic SDK
 ├── tools/              # Agent tool definitions
-│   ├── definitions.js  # Tool schemas
-│   └── executor.js     # Tool execution logic
+│   ├── definitions.js  # Tool schemas (15 tools)
+│   ├── executor.js     # Tool execution logic
+│   ├── subagent.js     # Isolated sub-agent execution
+│   └── todo.js         # Persistent task tracking
 ├── skills/             # Built-in skill prompts
 ├── plugins/            # Plugin system
 │   ├── loader.js       # Plugin loader + security integration
