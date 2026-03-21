@@ -15,9 +15,24 @@ import {
   snapshotFile,
   generateDiff,
 } from '../security.js';
+import { executeSubagent } from './subagent.js';
+import { executeTodo } from './todo.js';
+import { executeLoadSkill } from '../skill-loader.js';
 
 const DANGEROUS_TOOLS = ['run_command', 'write_file', 'edit_file', 'delete_file', 'move_file'];
 let autoApprove = false;
+
+// Runtime provider/conversation references for subagent
+let _provider = null;
+let _conversation = null;
+
+export function setProvider(provider) {
+  _provider = provider;
+}
+
+export function setConversation(conversation) {
+  _conversation = conversation;
+}
 
 export function setAutoApprove(value) {
   autoApprove = value;
@@ -365,9 +380,25 @@ const EXECUTORS = {
   create_directory: executeCreateDirectory,
   delete_file: executeDeleteFile,
   move_file: executeMoveFile,
+  // Claude Code-inspired tools
+  todo_write: (args) => executeTodo(args),
+  load_skill: (args) => executeLoadSkill(args),
 };
 
 export async function executeTool(name, args) {
+  // Special handling for subagent — needs provider + conversation
+  if (name === 'spawn_subagent') {
+    if (!_provider) {
+      return { error: 'Subagent requires an active provider. Make sure provider is set.' };
+    }
+    try {
+      return await executeSubagent(args, _provider, _conversation);
+    } catch (err) {
+      await logAudit('tool_error', { name, error: err.message });
+      return { error: `Subagent failed: ${err.message}` };
+    }
+  }
+
   const executor = EXECUTORS[name];
   if (!executor) {
     return { error: `Unknown tool: ${name}` };
@@ -387,3 +418,4 @@ export async function executeTool(name, args) {
     return { error: `Tool execution failed: ${err.message}` };
   }
 }
+

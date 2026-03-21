@@ -9,6 +9,8 @@ import { SessionManager } from './session.js';
 import { loadBuiltinSkills, skillsToSystemPrompt } from './skill-loader.js';
 import { detectProject, projectToSystemPrompt } from './project-detector.js';
 import { TokenTracker } from './token-tracker.js';
+import { todosToSystemPrompt } from './tools/todo.js';
+import { setProvider, setConversation } from './tools/executor.js';
 import { showBanner } from './ui/banner.js';
 import { startREPL } from './ui/repl.js';
 
@@ -23,12 +25,14 @@ program
   .option('-k, --api-key <key>', 'API key')
   .option('-u, --base-url <url>', 'Custom API base URL')
   .option('-r, --resume', 'Resume the last session')
+  .option('--fast-model <name>', 'Fast/cheap model for auxiliary ops (summaries, topic detection)')
   .action(async (opts) => {
     // Override config with CLI flags
     if (opts.provider) setConfig('provider', opts.provider);
     if (opts.model) setConfig('model', opts.model);
     if (opts.apiKey) setConfig('apiKey', opts.apiKey);
     if (opts.baseUrl) setConfig('baseURL', opts.baseUrl);
+    if (opts.fastModel) setConfig('fastModel', opts.fastModel);
 
     // First-run setup if not configured
     if (!isConfigured()) {
@@ -43,8 +47,18 @@ program
       process.exit(1);
     }
 
-    // Create provider
+    // Create primary provider
     const provider = createProvider(config);
+
+    // Create fast provider for cheap auxiliary ops (if configured)
+    let fastProvider = null;
+    if (config.fastModel && config.fastModel !== config.model) {
+      try {
+        fastProvider = createProvider({ ...config, model: config.fastModel });
+      } catch {
+        // fall back to primary provider
+      }
+    }
 
     // Load memory
     const memory = new Memory();
@@ -61,6 +75,10 @@ program
 
     // Create conversation
     const conversation = new Conversation();
+
+    // Wire provider/conversation into executor for subagent support
+    setProvider(provider);
+    setConversation(conversation);
 
     // Resume session if requested
     if (opts.resume) {
@@ -81,7 +99,7 @@ program
       conversation.addSystemContext(memoryPrompt);
     }
 
-    // Inject skills
+    // Inject skills catalog (lightweight — just names, loaded on-demand)
     const skills = await loadBuiltinSkills();
     const skillsPrompt = skillsToSystemPrompt(skills);
     if (skillsPrompt) {
@@ -94,10 +112,15 @@ program
       conversation.addSystemContext(projectPrompt);
     }
 
+    // Inject active todos
+    const todosPrompt = await todosToSystemPrompt();
+    if (todosPrompt) {
+      conversation.addSystemContext(todosPrompt);
+    }
+
     // Show banner and start REPL
     showBanner(config, skills.length, project);
-    await startREPL(provider, conversation, memory, tokenTracker, sessionManager, config);
+    await startREPL(provider, conversation, memory, tokenTracker, sessionManager, config, fastProvider);
   });
 
 program.parse();
-

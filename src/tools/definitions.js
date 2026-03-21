@@ -1,3 +1,5 @@
+// Tool definitions — schemas only, no executor imports (avoids circular deps)
+
 const TOOLS = [
   {
     name: 'read_file',
@@ -145,6 +147,72 @@ const TOOLS = [
       required: ['source', 'destination'],
     },
   },
+  // ── Claude Code-inspired tools ──
+  {
+    name: 'spawn_subagent',
+    description: 'Spawn an isolated sub-agent to handle a focused task. The sub-agent gets a fresh context with only the task description, can use all tools, and returns only its final answer. Use this for exploratory tasks (searching codebases, reading multiple files to find something specific) to keep the main conversation clean.',
+    parameters: {
+      type: 'object',
+      properties: {
+        task: {
+          type: 'string',
+          description: 'Clear description of the task for the sub-agent to complete. Be specific about what information to return.',
+        },
+        context: {
+          type: 'string',
+          description: 'Optional additional context to provide (e.g. file paths, variable names, relevant background).',
+        },
+      },
+      required: ['task'],
+    },
+  },
+  {
+    name: 'todo_write',
+    description: 'Manage your task list. Use this to track progress on multi-step work. Create todos when starting complex tasks, update status as you complete steps, and mark done when finished. Your todo list persists and is shown to you at the start of each conversation.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['add', 'update', 'complete', 'remove', 'list'],
+          description: 'Action to perform on the todo list',
+        },
+        id: {
+          type: 'string',
+          description: 'Todo ID (required for update/complete/remove)',
+        },
+        content: {
+          type: 'string',
+          description: 'Todo description (required for add, optional for update)',
+        },
+        priority: {
+          type: 'string',
+          enum: ['high', 'medium', 'low'],
+          description: 'Priority level (default: medium)',
+        },
+      },
+      required: ['action'],
+    },
+  },
+  {
+    name: 'load_skill',
+    description: 'Load a built-in skill/knowledge module on-demand. Skills provide expert knowledge for specific domains (debugging, testing, git workflow, etc.). Call this when you need specialized guidance. Use list action first to see available skills.',
+    parameters: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['list', 'load'],
+          description: 'list = show available skills, load = load a specific skill by name',
+        },
+        name: {
+          type: 'string',
+          description: 'Skill name to load (required for load action)',
+        },
+      },
+      required: ['action'],
+    },
+  },
 ];
 
 export function getToolDefinitions() {
@@ -154,3 +222,4 @@ export function getToolDefinitions() {
 export function getToolByName(name) {
   return TOOLS.find((t) => t.name === name);
 }
+

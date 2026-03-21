@@ -164,6 +164,9 @@ function getToolIcon(name) {
     create_directory: '📂',
     delete_file: '🗑️',
     move_file: '📋',
+    spawn_subagent: '🤖',
+    todo_write: '✅',
+    load_skill: '📚',
   };
   return icons[name] || '🔧';
 }
@@ -182,6 +185,9 @@ function getToolSummary(name, args) {
     case 'create_directory': return args.path || '';
     case 'delete_file': return args.path || '';
     case 'move_file': return `${args.source} → ${args.destination}`;
+    case 'spawn_subagent': return (args.task || '').slice(0, 60);
+    case 'todo_write': return `${args.action}${args.content ? ': ' + args.content.slice(0, 40) : ''}`;
+    case 'load_skill': return args.action === 'list' ? 'listing skills' : `loading ${args.name || ''}`;
     default: return JSON.stringify(args).slice(0, 60);
   }
 }
@@ -200,6 +206,9 @@ function getResultSummary(name, result) {
     case 'create_directory': return 'created';
     case 'delete_file': return 'deleted';
     case 'move_file': return 'moved';
+    case 'spawn_subagent': return `${result.iterations || 0} iterations`;
+    case 'todo_write': return result.success ? 'done' : result.todos ? `${result.pending} pending` : 'done';
+    case 'load_skill': return result.name ? `loaded ${result.name}` : `${result.available || 0} available`;
     default: return 'done';
   }
 }

@@ -43,7 +43,7 @@ const SLASH_COMMANDS = {
   '/exit': 'Quit Void Spirit',
 };
 
-export async function startREPL(provider, conversation, memory, tokenTracker, sessionManager, config) {
+export async function startREPL(provider, conversation, memory, tokenTracker, sessionManager, config, fastProvider) {
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -302,22 +302,36 @@ async function handleSlashCommand(input, conversation, memory, provider, rl, tok
       return true;
 
     case '/compact':
-      renderInfo('Compacting conversation...');
-      const summaryConv = [...conversation.getMessages()];
-      summaryConv.push({
+      renderInfo('Compacting conversation (structured 3-layer)...');
+      const compactMessages = [...conversation.getMessages()];
+      compactMessages.push({
         role: 'user',
-        content: 'Please provide a brief summary of our conversation so far, including key decisions, code changes, and current state. Be concise.',
+        content: `Provide a structured summary of our conversation in exactly this format:
+
+## System State
+List all files modified, tools used, current project state.
+
+## Decision Log
+Key decisions made and their reasoning.
+
+## Pending Tasks
+What remains to be done, any open questions.
+
+Be concise but complete.`,
       });
 
       try {
         let summary = '';
-        const stream = provider.stream(summaryConv, []);
+        // Use fast model for compaction if available (cheaper)
+        const compactProvider = fastProvider || provider;
+        const stream = compactProvider.stream(compactMessages, []);
         for await (const event of stream) {
           if (event.type === 'text') summary += event.content;
           if (event.type === 'done') break;
         }
         conversation.compact(summary);
         renderSuccess(`Conversation compacted. ~${conversation.getTokenEstimate()} tokens`);
+        if (fastProvider) renderInfo('(used fast model for compaction)');
       } catch (err) {
         renderError(`Compact failed: ${err.message}`);
       }
