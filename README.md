@@ -126,6 +126,8 @@ void-spirit --resume
 | `/export` | Export conversation to markdown |
 | `/install <url>` | Install a plugin |
 | `/plugins` | List installed plugins |
+| `/trust <name>` | Trust a plugin (grant declared permissions) |
+| `/untrust <name>` | Revoke trust (restrict to read-only) |
 | `/exit` | Quit |
 
 ---
@@ -162,6 +164,30 @@ Install plugins from GitHub:
 
 Plugins are stored in `~/.void-spirit/plugins/`.
 
+### Plugin Security
+
+Void Spirit enforces a **three-layer plugin security model**:
+
+**Permission Scoping** — Plugins declare capabilities in `manifest.json`:
+
+```json
+{ "permissions": ["fs:read", "fs:write", "web:fetch"] }
+```
+
+| Capability | Risk | Allowed Tools |
+|---|---|---|
+| `fs:read` | 🟢 Low | read_file, list_directory, search_files, grep |
+| `fs:write` | 🟡 Medium | write_file, edit_file, create_directory |
+| `fs:delete` | 🟠 High | delete_file, move_file |
+| `command:run` | 🔴 Critical | run_command |
+| `git:read` | 🟢 Low | git (status, log, diff) |
+| `git:write` | 🟡 Medium | git (commit, push, checkout) |
+| `web:fetch` | 🟡 Medium | web_fetch |
+
+**Trust Tiers** — 🟢 Built-in (full) · 🔵 Verified (declared perms) · 🟡 Untrusted (read-only). Use `/trust` and `/untrust` to manage. Verified plugins include SHA-256 integrity checking.
+
+**Sandboxed Execution** — Plugin tool calls go through a proxy executor that blocks unauthorized tools, restricts file paths, and logs all blocked attempts.
+
 ---
 
 ## Architecture
@@ -185,7 +211,11 @@ src/
 │   ├── definitions.js  # Tool schemas
 │   └── executor.js     # Tool execution logic
 ├── skills/             # Built-in skill prompts
-├── plugins/            # Plugin loader
+├── plugins/            # Plugin system
+│   ├── loader.js       # Plugin loader + security integration
+│   ├── plugin-permissions.js  # Capability → tool mapping
+│   ├── plugin-sandbox.js      # Sandboxed tool executor
+│   └── trust-manager.js       # Three-tier trust model
 └── ui/                 # Terminal UI
     ├── banner.js       # Startup banner
     ├── renderer.js     # Markdown renderer

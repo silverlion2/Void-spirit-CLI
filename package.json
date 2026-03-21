@@ -10,7 +10,8 @@
   },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node src/index.js"
+    "dev": "node src/index.js",
+    "test": "vitest run"
   },
   "keywords": [
     "ai",
@@ -76,5 +77,8 @@
     "node-fetch": "^3.3.2",
     "openai": "^4.85.4",
     "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
   }
 }
