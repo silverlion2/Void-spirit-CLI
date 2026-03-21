@@ -49,11 +49,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/silverlion2/void-spirit-cli.git"
+    "url": "git+https://github.com/silverlion2/Void-spirit-CLI.git"
   },
-  "homepage": "https://github.com/silverlion2/void-spirit-cli#readme",
+  "homepage": "https://github.com/silverlion2/Void-spirit-CLI#readme",
   "bugs": {
-    "url": "https://github.com/silverlion2/void-spirit-cli/issues"
+    "url": "https://github.com/silverlion2/Void-spirit-CLI/issues"
   },
   "engines": {
     "node": ">=18.0.0"
