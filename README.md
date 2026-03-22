@@ -44,7 +44,7 @@ First run will launch the setup wizard to pick your provider and model.
 | **Cost** | $20/mo subscription | Your API key only | Free / API key |
 | **China access** | ❌ Blocked | ✅ DeepSeek, Gemini, Ollama | ✅ |
 | **Local models** | ❌ | ✅ Ollama | ✅ |
-| **Multi-provider** | Claude only | ✅ 8+ providers | ✅ 20+ |
+| **Multi-provider** | Claude only | ✅ 17+ providers | ✅ 20+ |
 | **Login required** | ✅ Anthropic account | ❌ None | ❌ None |
 | **Session persist** | ✅ | ✅ | ✅ |
 | **Conversation branching** | ❌ | ✅ Fork & switch | ❌ |
@@ -67,6 +67,15 @@ First run will launch the setup wizard to pick your provider and model.
 | Groq | Cloud | Ultra-fast inference |
 | Ollama | Local | No internet needed |
 | Together AI | Cloud | Open-source models |
+| OpenRouter | Cloud | MiMo, Mistral, Llama, etc. |
+| Mistral | Cloud | Large, Nemo, Pixtral |
+| Perplexity | Cloud | Sonar reasoning |
+| Fireworks | Cloud | Serverless Llama endpoints |
+| Cerebras | Cloud | Ultra-fast hardware |
+| Moonshot / Kimi | Cloud | Native endpoint |
+| Alibaba Qwen | Cloud | DashScope compatible |
+| SambaNova | Cloud | Specialized inference |
+| LM Studio | Local | Like Ollama, no key needed |
 | Custom | Any | Any OpenAI-compatible endpoint |
 
 ---
