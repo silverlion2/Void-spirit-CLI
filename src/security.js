@@ -110,6 +110,10 @@ export function redactSensitiveContent(content) {
 // ── Audit Log ────────────────────────────────────────────────────
 const AUDIT_PATH = path.join(os.homedir(), '.void-spirit', 'audit.log');
 
+export function getAuditPath() {
+  return AUDIT_PATH;
+}
+
 export async function logAudit(action, details) {
   try {
     const dir = path.dirname(AUDIT_PATH);
@@ -123,6 +127,36 @@ export async function logAudit(action, details) {
   } catch {
     // silently fail — audit should never break the tool
   }
+}
+
+export async function getAuditLog({ limit = 50, action = null, since = null } = {}) {
+  try {
+    const raw = await fs.readFile(AUDIT_PATH, 'utf-8');
+    let entries = raw.trim().split('\n').filter(Boolean).map((line) => {
+      try { return JSON.parse(line); } catch { return null; }
+    }).filter(Boolean);
+
+    if (action) {
+      entries = entries.filter((e) => e.action === action);
+    }
+    if (since) {
+      const sinceDate = new Date(since);
+      entries = entries.filter((e) => new Date(e.timestamp) >= sinceDate);
+    }
+    return entries.slice(-limit);
+  } catch {
+    return [];
+  }
+}
+
+export async function exportAuditLog(outputPath) {
+  const entries = await getAuditLog({ limit: Infinity });
+  const json = JSON.stringify(entries, null, 2);
+  if (outputPath) {
+    await fs.writeFile(outputPath, json, 'utf-8');
+    return { exported: true, path: outputPath, count: entries.length };
+  }
+  return { entries, count: entries.length };
 }
 
 // ── Undo / Rollback ──────────────────────────────────────────────

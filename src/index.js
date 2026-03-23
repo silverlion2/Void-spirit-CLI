@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { getConfig, isConfigured, setupWizard, setConfig } from './config.js';
+import { getConfig, isConfigured, setupWizard, setConfig, loadTeamConfig } from './config.js';
 import { createProvider } from './providers/index.js';
 import { Conversation } from './conversation.js';
 import { Memory } from './memory.js';
@@ -13,6 +13,8 @@ import { todosToSystemPrompt } from './tools/todo.js';
 import { setProvider, setConversation } from './tools/executor.js';
 import { showBanner } from './ui/banner.js';
 import { startREPL } from './ui/repl.js';
+import { exportAuditLog } from './security.js';
+import chalk from 'chalk';
 
 const program = new Command();
 
@@ -26,7 +28,22 @@ program
   .option('-u, --base-url <url>', 'Custom API base URL')
   .option('-r, --resume', 'Resume the last session')
   .option('--fast-model <name>', 'Fast/cheap model for auxiliary ops (summaries, topic detection)')
+  .option('--budget <tokens>', 'Per-session token budget limit', parseInt)
+  .option('--budget-usd <amount>', 'Per-session USD spending limit', parseFloat)
+  .option('--export-audit [path]', 'Export audit log as JSON and exit')
   .action(async (opts) => {
+    // Handle --export-audit (standalone, exits immediately)
+    if (opts.exportAudit !== undefined) {
+      const outPath = typeof opts.exportAudit === 'string' ? opts.exportAudit : null;
+      const result = await exportAuditLog(outPath);
+      if (result.exported) {
+        console.log(chalk.green(`  ✓ Exported ${result.count} audit entries to ${result.path}`));
+      } else {
+        console.log(JSON.stringify(result.entries, null, 2));
+      }
+      process.exit(0);
+    }
+
     // Override config with CLI flags
     if (opts.provider) setConfig('provider', opts.provider);
     if (opts.model) setConfig('model', opts.model);
@@ -37,6 +54,16 @@ program
     // First-run setup if not configured
     if (!isConfigured()) {
       await setupWizard();
+    }
+
+    // Load team config (project-level overrides)
+    const teamResult = await loadTeamConfig(process.cwd());
+    if (teamResult.loaded) {
+      console.log(chalk.dim(`  ✓ Team config loaded from ${teamResult.path}`));
+      if (teamResult.applied.budget) console.log(chalk.dim(`    Token budget: ${teamResult.applied.budget}`));
+      if (teamResult.applied.budgetUSD) console.log(chalk.dim(`    USD budget: $${teamResult.applied.budgetUSD}`));
+    } else if (teamResult.error) {
+      console.log(chalk.yellow(`  ⚠ ${teamResult.error}`));
     }
 
     const config = getConfig();
@@ -70,8 +97,12 @@ program
     // Detect project
     const project = await detectProject(process.cwd());
 
-    // Token tracker
+    // Token tracker with budget enforcement
     const tokenTracker = new TokenTracker(config.model);
+    const budgetTokens = opts.budget || config.budget;
+    const budgetUSD = opts.budgetUsd || config.budgetUSD;
+    if (budgetTokens) tokenTracker.setBudget(budgetTokens);
+    if (budgetUSD) tokenTracker.setBudgetUSD(budgetUSD);
 
     // Create conversation
     const conversation = new Conversation();

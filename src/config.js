@@ -1,6 +1,8 @@
 import Conf from 'conf';
 import { createInterface } from 'readline';
 import chalk from 'chalk';
+import fs from 'fs/promises';
+import path from 'path';
 
 const PROVIDER_PRESETS = {
   openai: {
@@ -143,6 +145,8 @@ const config = new Conf({
     providerType: null,
     memory: [],
     theme: 'default',
+    budget: null,
+    budgetUSD: null,
   },
 });
 
@@ -257,6 +261,40 @@ function isConfigured() {
   return config.get('provider') !== null && config.get('model') !== null;
 }
 
+// ── Team Config ──────────────────────────────────────────────────
+
+async function loadTeamConfig(projectDir) {
+  const teamPath = path.join(projectDir, '.void-spirit', 'team.json');
+  try {
+    const raw = await fs.readFile(teamPath, 'utf-8');
+    const team = JSON.parse(raw);
+    // Merge team config into active config (team overrides user)
+    const ALLOWED_KEYS = ['provider', 'model', 'baseURL', 'providerType', 'budget', 'budgetUSD'];
+    const applied = {};
+    for (const key of ALLOWED_KEYS) {
+      if (team[key] !== undefined) {
+        config.set(key, team[key]);
+        applied[key] = team[key];
+      }
+    }
+    // Merge blocked commands if present
+    if (Array.isArray(team.blockedCommands)) {
+      applied.blockedCommands = team.blockedCommands;
+    }
+    // Merge allowed paths if present
+    if (Array.isArray(team.allowedPaths)) {
+      applied.allowedPaths = team.allowedPaths;
+    }
+    return { loaded: true, applied, path: teamPath };
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { loaded: false };
+    }
+    // Invalid JSON or other error — warn but don't crash
+    return { loaded: false, error: `Team config error: ${err.message}` };
+  }
+}
+
 export {
   getConfig,
   setConfig,
@@ -264,5 +302,6 @@ export {
   resolveApiKey,
   setupWizard,
   isConfigured,
+  loadTeamConfig,
   PROVIDER_PRESETS,
 };

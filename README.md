@@ -22,6 +22,25 @@ Most AI coding agents lock you into a single provider. **Void Spirit doesn't.**
 
 ---
 
+## Who Is Void Spirit For?
+
+### 🧑‍💻 Personal — Indie Devs, Students, Hobbyists
+
+- Free AI pair programming with **any model** you choose
+- Learn to code with AI — no subscription paywall
+- Built-in productivity skills: daily planner, notes, learning paths
+- Privacy-first: run Ollama locally, your code stays on your machine
+
+### 🏢 Teams & Business — Consultants, Startups, Enterprise
+
+- **Token budgets** — Cap spending per session (`--budget 50000` or `--budget-usd 0.50`)
+- **Team config** — Share standardized settings via `.void-spirit/team.json` in your repo
+- **Audit log** — Full trail of every AI action for compliance (`/audit`, `--export-audit`)
+- **Data sovereignty** — Run with Ollama or LM Studio, air-gapped, zero data exfiltration
+- **Plugin security** — Three-tier trust model with SHA-256 integrity verification
+
+---
+
 ## Install
 
 ```bash
@@ -46,6 +65,9 @@ First run will launch the setup wizard to pick your provider and model.
 | **Local models** | ❌ | ✅ Ollama | ✅ |
 | **Multi-provider** | Claude only | ✅ 17+ providers | ✅ 20+ |
 | **Login required** | ✅ Anthropic account | ❌ None | ❌ None |
+| **Token budgets** | ❌ | ✅ Per-session caps | ❌ |
+| **Team config** | ❌ | ✅ Shared `.void-spirit/team.json` | ❌ |
+| **Audit log** | ❌ | ✅ Full action trail + export | ❌ |
 | **Session persist** | ✅ | ✅ | ✅ |
 | **Conversation branching** | ❌ | ✅ Fork & switch | ❌ |
 | **Plugin system** | ❌ | ✅ GitHub plugins | ✅ |
@@ -92,8 +114,11 @@ First run will launch the setup wizard to pick your provider and model.
 - 📝 **Streaming markdown** — Rich formatted output in terminal
 - 🧠 **Persistent memory** — Cross-session memory with `/memory add`
 - 📊 **Token tracking** — Real-time usage and cost estimation
+- 💵 **Token budgets** — Per-session spending caps (`--budget`, `--budget-usd`)
+- 👥 **Team config** — Shared settings via `.void-spirit/team.json`
 - 🎯 **Project detection** — Auto-detects project type and adapts context
 - 🔒 **Security sandbox** — Path sandboxing, command blocklist, audit log
+- 📋 **Audit export** — Export AI action log for compliance (`--export-audit`)
 - ↩️ **Undo/rollback** — Revert file changes with `/undo`
 - 🔌 **Plugin system** — Install from GitHub with `/install <url>`
 

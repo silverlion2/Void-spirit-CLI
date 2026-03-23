@@ -57,7 +57,63 @@ export class TokenTracker {
     // Real usage from API (if available)
     this.realInputTokens = null;
     this.realOutputTokens = null;
+    // Budget enforcement
+    this.budgetTokens = null;   // max total tokens allowed
+    this.budgetUSD = null;      // max USD allowed
   }
+
+  // ── Budget Management ────────────────────────────────────────
+
+  setBudget(maxTokens) {
+    this.budgetTokens = maxTokens;
+  }
+
+  setBudgetUSD(maxUSD) {
+    this.budgetUSD = maxUSD;
+    // Also compute a token limit from cost table if possible
+    const costs = MODEL_COSTS[this.model];
+    if (costs) {
+      // Use weighted average assuming ~30% input, ~70% output by token count
+      const avgCostPer1M = costs.input * 0.3 + costs.output * 0.7;
+      if (avgCostPer1M > 0) {
+        this.budgetTokens = Math.floor((maxUSD / avgCostPer1M) * 1_000_000);
+      }
+    }
+  }
+
+  isBudgetExceeded() {
+    // Check USD budget first
+    if (this.budgetUSD !== null) {
+      const cost = this.getCost();
+      if (cost && cost.total >= this.budgetUSD) {
+        return { exceeded: true, reason: `USD budget exceeded: $${cost.total.toFixed(4)} >= $${this.budgetUSD.toFixed(2)}` };
+      }
+    }
+    // Check token budget
+    if (this.budgetTokens !== null) {
+      const used = this.getUsedTokens();
+      if (used >= this.budgetTokens) {
+        return { exceeded: true, reason: `Token budget exceeded: ${formatTokens(used)} >= ${formatTokens(this.budgetTokens)}` };
+      }
+    }
+    return { exceeded: false };
+  }
+
+  getBudgetStatus() {
+    if (this.budgetTokens === null && this.budgetUSD === null) return null;
+    const used = this.getUsedTokens();
+    const cost = this.getCost();
+    return {
+      tokenLimit: this.budgetTokens,
+      usdLimit: this.budgetUSD,
+      tokensUsed: used,
+      costUsed: cost ? cost.total : null,
+      tokenPercentage: this.budgetTokens ? Math.round((used / this.budgetTokens) * 100) : null,
+      usdPercentage: this.budgetUSD && cost ? Math.round((cost.total / this.budgetUSD) * 100) : null,
+    };
+  }
+
+  // ── Core Tracking ────────────────────────────────────────────
 
   track(inputText, outputText) {
     // Rough estimate: 1 token ≈ 4 chars
@@ -149,6 +205,16 @@ export class TokenTracker {
       const pctColor = usage.percentage > 80 ? '#ef4444' : usage.percentage > 60 ? '#f59e0b' : '#64748b';
       line += chalk.hex(pctColor)(` · ${usage.percentage}% context`);
     }
+    // Show budget info if set
+    const budget = this.getBudgetStatus();
+    if (budget) {
+      const pct = budget.usdPercentage ?? budget.tokenPercentage ?? 0;
+      const budgetColor = pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#22c55e';
+      const label = budget.usdLimit
+        ? `$${budget.costUsed?.toFixed(4) || '0'}/$${budget.usdLimit.toFixed(2)}`
+        : `${formatTokens(budget.tokensUsed)}/${formatTokens(budget.tokenLimit)}`;
+      line += chalk.hex(budgetColor)(` · 💰 ${label}`);
+    }
     return line;
   }
 }
@@ -158,3 +224,4 @@ function formatTokens(n) {
   if (n < 1_000_000) return (n / 1000).toFixed(1) + 'K';
   return (n / 1_000_000).toFixed(2) + 'M';
 }
+
