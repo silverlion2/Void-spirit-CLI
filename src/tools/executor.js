@@ -22,6 +22,13 @@ import { executeLoadSkill } from '../skill-loader.js';
 const DANGEROUS_TOOLS = ['run_command', 'write_file', 'edit_file', 'delete_file', 'move_file'];
 let autoApprove = false;
 
+// Runtime MCP manager reference
+let _mcpManager = null;
+
+export function setMCPManager(manager) {
+  _mcpManager = manager;
+}
+
 // Runtime provider/conversation references for subagent
 let _provider = null;
 let _conversation = null;
@@ -396,6 +403,25 @@ export async function executeTool(name, args) {
     } catch (err) {
       await logAudit('tool_error', { name, error: err.message });
       return { error: `Subagent failed: ${err.message}` };
+    }
+  }
+
+  // ── MCP tool routing ──────────────────────────────────────────
+  if (name.startsWith('mcp_') && _mcpManager) {
+    // MCP tools go through approval if they look dangerous
+    const approved = await confirmAction(name, args);
+    if (!approved) {
+      await logAudit('tool_denied', { name, args });
+      return { error: 'Action denied by user.' };
+    }
+
+    try {
+      await logAudit('mcp_tool_call', { name, args });
+      const result = await _mcpManager.callTool(name, args);
+      return result;
+    } catch (err) {
+      await logAudit('tool_error', { name, error: err.message });
+      return { error: `MCP tool failed: ${err.message}` };
     }
   }
 

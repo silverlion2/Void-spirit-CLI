@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-export function showBanner(config, skillCount = 0, project = null) {
+export function showBanner(config, skillCount = 0, project = null, mcpManager = null) {
   const v = chalk.hex('#7c3aed');
   const d = chalk.hex('#a78bfa');
   const dim = chalk.dim;
@@ -24,6 +24,10 @@ export function showBanner(config, skillCount = 0, project = null) {
     if (skillCount > 0) {
       console.log(dim('  Skills:   ') + chalk.white(`${skillCount} loaded`));
     }
+    if (mcpManager && mcpManager.servers.size > 0) {
+      const mcpToolCount = mcpManager.getTools().length;
+      console.log(dim('  MCP:      ') + chalk.hex('#00d4aa')(`${mcpManager.servers.size} server(s), ${mcpToolCount} tools`));
+    }
   }
 
   if (project) {
@@ -39,8 +43,10 @@ export function showBanner(config, skillCount = 0, project = null) {
       if (project.hasTypeScript) gitInfo.push('typescript');
       console.log(dim('  Tools:    ') + chalk.white(gitInfo.join(', ')));
     }
-    if (project.customPrompt) {
-      console.log(dim('  Custom:   ') + chalk.hex('#22c55e')('.void-spirit.md loaded'));
+    if (project.instructionFiles && project.instructionFiles.length > 0) {
+      console.log(dim('  Rules:    ') + chalk.hex('#22c55e')(project.instructionFiles.join(', ')));
+    } else if (project.customPrompt) {
+      console.log(dim('  Custom:   ') + chalk.hex('#22c55e')('project instructions loaded'));
     }
   }
 

@@ -58,23 +58,80 @@ First run will launch the setup wizard to pick your provider and model.
 
 ## How It Compares
 
-| Feature | Claude Code | Void Spirit | Kode CLI |
+| Feature | Claude Code | OpenCode | Void Spirit |
 |---|---|---|---|
-| **Cost** | $20/mo subscription | Your API key only | Free / API key |
-| **China access** | ❌ Blocked | ✅ DeepSeek, Gemini, Ollama | ✅ |
-| **Local models** | ❌ | ✅ Ollama | ✅ |
-| **Multi-provider** | Claude only | ✅ 17+ providers | ✅ 20+ |
+| **Cost** | $20/mo subscription | Your API key only | Your API key only |
+| **China access** | ❌ Blocked | ⚠️ Possible | ✅ DeepSeek, Gemini, Ollama, Qwen |
+| **Local models** | ❌ | ✅ Ollama | ✅ Ollama + LM Studio |
+| **Multi-provider** | Claude only | ✅ 10+ | ✅ 17+ providers |
 | **Login required** | ✅ Anthropic account | ❌ None | ❌ None |
-| **Token budgets** | ❌ | ✅ Per-session caps | ❌ |
-| **Team config** | ❌ | ✅ Shared `.void-spirit/team.json` | ❌ |
-| **Audit log** | ❌ | ✅ Full action trail + export | ❌ |
+| **MCP support** | ✅ | ✅ | ✅ Full MCP host |
+| **Token budgets** | ❌ | ❌ | ✅ Per-session caps |
+| **Team config** | ❌ | ❌ | ✅ Shared `.void-spirit/team.json` |
+| **Audit log** | ❌ | ❌ | ✅ Full action trail + export |
+| **LSP integration** | ❌ | ✅ | ❌ |
+| **Plan/Build modes** | ❌ | ✅ | Implicit via approval |
 | **Session persist** | ✅ | ✅ | ✅ |
-| **Conversation branching** | ❌ | ✅ Fork & switch | ❌ |
-| **Plugin system** | ❌ | ✅ GitHub plugins | ✅ |
-| **Security sandbox** | ✅ | ✅ Path + command sandbox | ⚠️ Partial |
-| **Subagents** | ✅ | ✅ Isolated context | ✅ |
-| **Task tracking** | ✅ | ✅ Persistent todos | ❌ |
-| **On-demand skills** | ❌ | ✅ Load on need | ❌ |
+| **Conversation branching** | ❌ | ❌ | ✅ Fork & switch |
+| **Plugin system** | ❌ | ❌ | ✅ GitHub plugins + security |
+| **Security sandbox** | ✅ | ⚠️ | ✅ Path + command sandbox |
+| **Subagents** | ✅ | ❌ | ✅ Isolated context |
+| **Task tracking** | ✅ | ❌ | ✅ Persistent todos |
+| **On-demand skills** | ❌ | ❌ | ✅ Load on need |
+| **OpenCode compatible** | ❌ | ✅ | ✅ Config + MCP import |
+
+---
+
+## OpenCode Compatible
+
+Void Spirit is fully compatible with the OpenCode ecosystem:
+
+### MCP Server Support
+
+Connect to any [Model Context Protocol](https://modelcontextprotocol.io/) server. Configure in `.void-spirit/team.json` or `opencode.json`:
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..." }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./src"]
+    }
+  }
+}
+```
+
+MCP tools appear alongside built-in tools automatically. Use `/mcp` to list connected servers.
+
+### Instruction Files
+
+Void Spirit reads project instruction files from multiple formats:
+
+| File | Source |
+|------|--------|
+| `.void-spirit.md` | Void Spirit (highest priority) |
+| `AGENTS.md` | OpenCode |
+| `CLAUDE.md` | Claude Code |
+| `.cursorrules` | Cursor |
+| `.cursor/rules/*.md` | Cursor (directory) |
+| `.github/copilot-instructions.md` | GitHub Copilot |
+
+All discovered files are merged into the system prompt automatically.
+
+### OpenCode Config Import
+
+Drop an `opencode.json` or `opencode.jsonc` in your project root. Void Spirit will:
+
+1. Import provider and model settings
+2. Import MCP server definitions
+3. Load instruction file references
+
+Your existing OpenCode config works out of the box — no migration needed.
 
 ---
 

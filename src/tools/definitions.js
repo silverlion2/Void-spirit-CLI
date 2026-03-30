@@ -215,11 +215,33 @@ const TOOLS = [
   },
 ];
 
+// ── Dynamic MCP tools (registered at runtime) ───────────────────
+let mcpTools = [];
+
+/**
+ * Register MCP-discovered tools into the global tool registry.
+ * @param {Array} tools — tools in Void Spirit format from MCPManager.getTools()
+ */
+export function registerDynamicTools(tools) {
+  mcpTools = tools || [];
+}
+
+/**
+ * Clear all dynamic tools (used on MCP restart/reconnect).
+ */
+export function clearDynamicTools() {
+  mcpTools = [];
+}
+
 export function getToolDefinitions() {
-  return TOOLS;
+  return [...TOOLS, ...mcpTools];
 }
 
 export function getToolByName(name) {
-  return TOOLS.find((t) => t.name === name);
+  return TOOLS.find((t) => t.name === name) || mcpTools.find((t) => t.name === name);
+}
+
+export function getMCPToolCount() {
+  return mcpTools.length;
 }
 

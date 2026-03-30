@@ -52,17 +52,57 @@ export async function detectProject(cwd) {
     hasTypeScript: false,
     packageManager: null,
     customPrompt: null,
+    instructionFiles: [], // NEW: loaded instruction files
   };
 
   // Check for git
   result.hasGit = existsSync(path.join(cwd, '.git'));
 
-  // Check for custom system prompt
-  const customPromptPath = path.join(cwd, '.void-spirit.md');
-  if (existsSync(customPromptPath)) {
+  // ── Load instruction files (OpenCode / Claude Code / Cursor compat) ──
+  // Priority order: lower index = lower priority (later entries override on conflict)
+  const INSTRUCTION_FILES = [
+    { name: '.cursorrules', path: path.join(cwd, '.cursorrules') },
+    { name: 'AGENTS.md', path: path.join(cwd, 'AGENTS.md') },
+    { name: 'CLAUDE.md', path: path.join(cwd, 'CLAUDE.md') },
+    { name: '.github/copilot-instructions.md', path: path.join(cwd, '.github', 'copilot-instructions.md') },
+    { name: '.void-spirit.md', path: path.join(cwd, '.void-spirit.md') }, // highest priority (native)
+  ];
+
+  const instructionParts = [];
+
+  for (const file of INSTRUCTION_FILES) {
+    if (existsSync(file.path)) {
+      try {
+        const content = await fs.readFile(file.path, 'utf-8');
+        if (content.trim()) {
+          instructionParts.push({ name: file.name, content: content.trim() });
+          result.instructionFiles.push(file.name);
+        }
+      } catch {}
+    }
+  }
+
+  // Check for .cursor/rules/*.md directory
+  const cursorRulesDir = path.join(cwd, '.cursor', 'rules');
+  if (existsSync(cursorRulesDir)) {
     try {
-      result.customPrompt = await fs.readFile(customPromptPath, 'utf-8');
+      const ruleFiles = await fs.readdir(cursorRulesDir);
+      for (const ruleFile of ruleFiles.filter(f => f.endsWith('.md'))) {
+        const rulePath = path.join(cursorRulesDir, ruleFile);
+        const content = await fs.readFile(rulePath, 'utf-8');
+        if (content.trim()) {
+          instructionParts.push({ name: `.cursor/rules/${ruleFile}`, content: content.trim() });
+          result.instructionFiles.push(`.cursor/rules/${ruleFile}`);
+        }
+      }
     } catch {}
+  }
+
+  // Merge all instruction files into customPrompt
+  if (instructionParts.length > 0) {
+    result.customPrompt = instructionParts
+      .map(p => `<!-- From: ${p.name} -->\n${p.content}`)
+      .join('\n\n');
   }
 
   // Check for package manager
@@ -134,6 +174,9 @@ export function projectToSystemPrompt(project) {
   }
   if (project.hasGit) {
     parts.push('Git: initialized (use conventional commits)');
+  }
+  if (project.instructionFiles && project.instructionFiles.length > 0) {
+    parts.push(`Project instructions loaded from: ${project.instructionFiles.join(', ')}`);
   }
 
   if (parts.length === 0 && !project.customPrompt) return '';

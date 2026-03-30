@@ -40,10 +40,11 @@ const SLASH_COMMANDS = {
   '/plugins': 'List installed plugins',
   '/trust <name>': 'Trust a plugin (grant declared permissions)',
   '/untrust <name>': 'Revoke trust (restrict to read-only)',
+  '/mcp': 'List connected MCP servers and their tools',
   '/exit': 'Quit Void Spirit',
 };
 
-export async function startREPL(provider, conversation, memory, tokenTracker, sessionManager, config, fastProvider) {
+export async function startREPL(provider, conversation, memory, tokenTracker, sessionManager, config, fastProvider, mcpManager) {
   const rl = createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -81,7 +82,7 @@ export async function startREPL(provider, conversation, memory, tokenTracker, se
 
     // Handle slash commands
     if (input.startsWith('/')) {
-      const handled = await handleSlashCommand(input, conversation, memory, provider, rl, tokenTracker, sessionManager, config);
+      const handled = await handleSlashCommand(input, conversation, memory, provider, rl, tokenTracker, sessionManager, config, mcpManager);
       if (handled) {
         rl.prompt();
         return;
@@ -232,7 +233,7 @@ async function agentLoop(provider, conversation, tools, tokenTracker) {
   }
 }
 
-async function handleSlashCommand(input, conversation, memory, provider, rl, tokenTracker, sessionManager, config) {
+async function handleSlashCommand(input, conversation, memory, provider, rl, tokenTracker, sessionManager, config, mcpManager) {
   const parts = input.split(/\s+/);
   const cmd = parts[0].toLowerCase();
 
@@ -674,6 +675,28 @@ Be concise but complete.`,
       }
       console.log(chalk.hex('#a78bfa')('\n  👋 Goodbye!\n'));
       process.exit(0);
+
+    case '/mcp': {
+      if (!mcpManager || mcpManager.servers.size === 0) {
+        renderInfo('No MCP servers connected. Configure them in .void-spirit/team.json or opencode.json.');
+        renderInfo('Example: { "mcpServers": { "github": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-github"] } } }');
+      } else {
+        console.log('');
+        console.log(chalk.hex('#a78bfa').bold('  MCP Servers:'));
+        const status = mcpManager.getStatus();
+        for (const server of status) {
+          console.log(chalk.hex('#00d4aa')(`    ${server.name}`) + chalk.dim(` — ${server.toolCount} tools`));
+          for (const tool of server.tools.slice(0, 10)) {
+            console.log(chalk.dim(`      • ${tool}`));
+          }
+          if (server.tools.length > 10) {
+            console.log(chalk.dim(`      ... and ${server.tools.length - 10} more`));
+          }
+        }
+        console.log('');
+      }
+      return true;
+    }
 
     default:
       renderError(`Unknown command: ${cmd}. Type /help for available commands.`);

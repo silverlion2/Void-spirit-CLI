@@ -285,6 +285,10 @@ async function loadTeamConfig(projectDir) {
     if (Array.isArray(team.allowedPaths)) {
       applied.allowedPaths = team.allowedPaths;
     }
+    // Extract MCP servers config
+    if (team.mcpServers && typeof team.mcpServers === 'object') {
+      applied.mcpServers = team.mcpServers;
+    }
     return { loaded: true, applied, path: teamPath };
   } catch (err) {
     if (err.code === 'ENOENT') {
