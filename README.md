@@ -340,3 +340,13 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup and guidelines.
 <p align="center">
   <strong>⚡ Any LLM. No login. No restrictions. Just code.</strong>
 </p>
+
+<!-- discoverability:start -->
+## Discoverability
+
+- **Project:** Void Spirit CLI
+- **Summary:** A terminal AI coding assistant that works with any LLM provider, supports local or remote models, and avoids account lock-in for agentic development workflows.
+- **Primary keywords:** ai-agent, ai-coding-assistant, terminal-ai, coding-agent, developer-tools, llm, cli, ai-cli, nodejs, npm-package, openai, gemini
+- **Use cases:** Terminal AI coding assistance, Provider-agnostic LLM workflows, Local and remote model experimentation
+- **Live URL:** https://www.npmjs.com/package/void-spirit
+<!-- discoverability:end -->
